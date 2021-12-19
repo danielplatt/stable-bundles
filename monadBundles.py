@@ -30,9 +30,10 @@ def main():
     # print(second_chern_of_monad(B, C))
 
     MAX_RANK_B = 3
-    MIN_TWIST = 0
-    MAX_TWIST = 50
-    MIN_C2 = 1
+    MIN_TWIST = -20
+    MAX_TWIST = 20
+    MIN_C2 = 2
+    MAX_C2 = 2
 
     for rB in range(2, MAX_RANK_B+1):
         rC = rB - 2
@@ -42,8 +43,8 @@ def main():
                 # good chern class?
                 c2 = second_chern_of_monad(B, C)
                 c1 = first_chern_of_monad(B, C)
-                if -4*c2+c1 == -6 and c2>MIN_C2:
-                    print('c2=%s. B=%s, C=%s' % (c2, B, C))
+                if -4*c2+c1 == -6 and c2 >= MIN_C2 and c2 <= MAX_C2:
+                    print('c1=%s, c2=%s. B=%s, C=%s' % (c1, c2, B, C))
 
     # for rB in range(MAX_RANK_B):
     #     rC = rB-2
