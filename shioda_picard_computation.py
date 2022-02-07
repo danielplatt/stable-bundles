@@ -171,7 +171,7 @@ def get_picard(matrix):
 
 
 if __name__ == '__main__':
-    skip_to = 0
+    skip_to = 4161
     gen = get_iterator_of_A()
     inv_counter = 0
     for (k, A) in enumerate(gen):

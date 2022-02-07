@@ -32,8 +32,8 @@ def main():
     MAX_RANK_B = 3
     MIN_TWIST = -20
     MAX_TWIST = 20
-    MIN_C2 = 2
-    MAX_C2 = 2
+    MIN_C2 = -2
+    MAX_C2 = 3
 
     for rB in range(2, MAX_RANK_B+1):
         rC = rB - 2
@@ -44,6 +44,9 @@ def main():
                 c2 = second_chern_of_monad(B, C)
                 c1 = first_chern_of_monad(B, C)
                 if -4*c2+c1 == -6 and c2 >= MIN_C2 and c2 <= MAX_C2:
+                    k=int(-(c1+1)/2)
+                    if k+min(B)>0:
+                        print('!')
                     print('c1=%s, c2=%s. B=%s, C=%s' % (c1, c2, B, C))
 
     # for rB in range(MAX_RANK_B):

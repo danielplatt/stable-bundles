@@ -1,6 +1,15 @@
-#https://dandrake.livejournal.com/83095.html
 
 def compositions(n,k):
+  '''
+  Creates a generator for all compositions of the integer n as k summands.
+  E.g. compositions(4,3) gives (0,0,4), (0,3,1), ..., (4,0,0).
+  Different orderings are counted as different compositions. Code taken
+  from https://dandrake.livejournal.com/83095.html
+
+  :param n: Positive integer to be composed
+  :param k: Number of summands in the composition
+  :return: Generator giving all compositions as tuples
+  '''
   if n < 0 or k < 0:
     return
   elif k == 0:
@@ -17,7 +26,10 @@ def compositions(n,k):
       for comp in compositions(n-i,k-1):
         yield [i] + comp
 
+def test_compositions():
+  print([k for k in compositions(4, 3)])
+  print(len([k for k in compositions(4, 3)]))
+
 
 if __name__ == '__main__':
-    print([k for k in compositions(4,4)])
-    print(len([k for k in compositions(4,4)]))
+    test_compositions()
