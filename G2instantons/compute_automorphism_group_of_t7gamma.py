@@ -4,20 +4,38 @@ from tqdm import tqdm
 
 
 def tuplefy(x: int):
+    '''
+    Turn a three digit integer into a three element tuple. E.g. 258 -> (2, 5, 8)
+    '''
     return (x//100, (x//10)%10, x%10)
 
 def get_phi():
+    '''
+    Returns the 3-form phi defining the exceptional Lie group G2 in the following form:
+    phi is a set of 2-tuples such as (False, (1, 2, 3)). Here, the numeric tuple stands for the
+    vector components of 3-form, and the boolean value stands for if there is a negative sign
+    in front of this primitive 3-form. For example, (False, (1, 2, 3)) stands for +dx1 wedge dx2 wedge dx3.
+    '''
     return {(False, tuplefy(123)), (False, tuplefy(145)), (False, tuplefy(167)), (False, tuplefy(246)),
             (True, tuplefy(257)), (True, tuplefy(347)), (True, tuplefy(356))} # this is a set
 
 def permutation_list_to_dict(permutation_list):
+    '''
+    Helper function that takes a permutation as a list and turns it into a dictionary and also
+    increases each entry by 1 at the same time.
+    E.g. [0,1,3,2,4,5,6] -> {1: 1, 2: 2, 3: 4, 4: 3, 5:5, 6: 6, 7: 7}
+    '''
     dictionary = {}
     for original_number, new_number in enumerate(permutation_list):
         dictionary[original_number+1] = new_number+1
     return dictionary
 
 def perform_bubble_sort(tuple_to_be_sorted):
-    # https://www.faqcode4u.com/faq/648262/python-bubble-sort-list-with-swap-count
+    '''
+    Performs bubble sort on a tuple and returns the sorted tuple together with the number of changes
+    needed. Taken from
+    https://www.faqcode4u.com/faq/648262/python-bubble-sort-list-with-swap-count
+    '''
     swapcount = 0
     temporary_list = list(tuple_to_be_sorted)
     for j in range(len(temporary_list)):
@@ -28,6 +46,11 @@ def perform_bubble_sort(tuple_to_be_sorted):
     return tuple(temporary_list), swapcount
 
 def permute_primitive_alternating_tensor(tensor, permutation_dict):
+    '''
+    Applies a permutation to a primitive tensor, e.g.
+    ((False, (1, 2, 3)), {1: 1, 2: 2, 3: 4, 4: 3, 5:5, 6: 6, 7: 7}) ->
+    (False, (1, 2, 4))
+    '''
     # first apply permutation
     permuted_vector = [permutation_dict[k] for k in tensor[1]]
 
@@ -37,12 +60,25 @@ def permute_primitive_alternating_tensor(tensor, permutation_dict):
     return (bool(number_of_swaps%2) ^ tensor[0], sorted_vector)
 
 def permute_composite_alternating_tensor(tensor, permutation_dict):
+    '''
+    Applies a permutation to a composite tensor, compare with permute_primitive_alternating_tensor
+    '''
     return set([permute_primitive_alternating_tensor(t, permutation_dict) for t in tensor])
 
 def get_all_reflections():
+    '''
+    Gives all 2^7 reflections in one or more coordinate directions of R^7 in the shape of
+    lists of length 7 with boolean entries. E.g. the list [False, True, True, False, False, False, False]
+    denotes a reflection in the second and third coordinate that leaves all other coordinates unchanged.
+    '''
     return itertools.product([False, True], repeat=7)
 
 def apply_reflection_to_primitive_tensor(reflection, tensor):
+    '''
+    Applies a permutation to a primitive tensor, e.g.
+    ((False, (1, 2, 3)), [False, True, False, False, False, False, False]) ->
+    (True, (1, 2, 3))
+    '''
     sign_count = 0
     for component in tensor[1]:
         if reflection[component-1]:
@@ -50,14 +86,22 @@ def apply_reflection_to_primitive_tensor(reflection, tensor):
     return (bool(sign_count%2) ^ tensor[0], tensor[1])
 
 def apply_reflection_to_composite_tensor(reflection, tensor):
+    '''
+    Applies a reflection to a composite tensor, compare with apply_reflection_to_primitive_tensor
+    '''
     return set([apply_reflection_to_primitive_tensor(reflection, t) for t in tensor])
 
 def find_phi_stabilisers():
+    '''
+    Find all automorphisms of T^7 and T^7/Gamma
+    '''
     automorphism_count = 0
     gamma_automorphism_count = 0
     phi = get_phi()
     G = SymmetricGroup(7)
     all_permutations = list(G.generate_schreier_sims(af=True))
+
+    # First, check with permutations, reflections, and products thereof preserve phi
     for permutation in all_permutations:
         for reflection in get_all_reflections():
             if phi == permute_composite_alternating_tensor(
@@ -69,17 +113,9 @@ def find_phi_stabilisers():
                 automorphism_count += 1
                 print(f'{automorphism_count}: Permutation/reflection {[x+1 for x in permutation], reflection} preserves phi. ', end='')
 
-                # phi is preserved, now can do detailed checks
-                # Detailed check 1: does this map descend to T^7/Gamma (check "weak commuting")
-                # if weak_check_commuting_with_Gamma(reflection, permutation):
-                #     print('* weakly commutes with Gamma')
-                #     gamma_automorphism_count += 1
-                # else:
-                #     print('')
-
-                # Detailed check 2: if composing this automorphism with a translation, can it be made
-                # to be descending to T^7/Gamma (this is more general than the previous question)
-
+                # In this case, phi is preserved, now can do detailed check
+                # Detailed check: if composing this automorphism with a translation, can it be made
+                # to be descending to T^7/Gamma?
                 has_compatible_translation = False
                 for translation in get_all_candidate_translations():
                     if weak_check_commuting_with_Gamma_with_translation(reflection, permutation, translation):
@@ -93,17 +129,31 @@ def find_phi_stabilisers():
     print(f'Of them, {gamma_automorphism_count} commute with Gamma')
 
 def get_all_candidate_translations():
+    '''
+    Return all 4^7 candidate translations that may be used to augment a product of a permutation
+    and reflection in order to be well-defined on T^7/Gamma, not just T^7. Because the maps
+    defining Gamma contain the number 1/2, it suffices to check translations by multiples of 1/4.
+    A translation by some other number, say 0.1, cannot satisfy translation(f(x))=g(translation(x))
+    for f, g one of the maps (not both the identity):
+    x->x, x->-x, x->1/2-x.
+    '''
     translations_as_vectors = itertools.product([0, 1/4, 2/4, 3/4], repeat=7)
     return [
         convert_translation_vector_to_translation_function(vec) for vec in translations_as_vectors
     ]
 
 def convert_translation_vector_to_translation_function(vector):
+    '''
+    Converts a vector into a function that can be applied to vectors
+    '''
     return lambda x: [
         x[k]+vector[k] for k in range(len(vector))
     ]
 
 def apply_reflection_to_point(reflection, point):
+    '''
+    Apply a reflection, given as a list of bool values, to a vector.
+    '''
     return [-coordinate if reflect_coordinate else coordinate for (coordinate, reflect_coordinate) in zip(point, reflection)]
 
 def apply_permutation_to_point(permutation, point):
@@ -117,69 +167,27 @@ def apply_permutation_to_point(permutation, point):
     return [point[permuted_index] for permuted_index in permutation]
 
 def alpha(point):
+    '''
+    The map alpha from the definition of T^7/Gamma
+    '''
     return [point[0], point[1], point[2], -point[3], -point[4], -point[5], -point[6]]
 
 def beta(point):
+    '''
+    The map beta from the definition of T^7/Gamma
+    '''
     return [point[0], -point[1], -point[2], point[3], point[4], 1/2-point[5], -point[6]]
 
 def gamma(point):
+    '''
+    The map gamma from the definition of T^7/Gamma
+    '''
     return [-point[0], point[1], -point[2], point[3], 1/2-point[4], point[5], 1/2-point[6]]
 
-def check_commuting_with_Gamma(reflection, permutation):
-    '''
-    Tests if gamma(permutation(reflection(.)))=permutation(reflection(gamma))) for each element gamma in Gamma.
-    '''
-    test_point = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07]
-    if apply_permutation_to_point(
-            permutation,
-            apply_reflection_to_point(
-                reflection,
-                alpha(test_point)
-            )
-    ) == alpha(
-        apply_permutation_to_point(
-            permutation,
-            apply_reflection_to_point(
-                reflection,
-                test_point
-            )
-        )
-    ) and \
-            apply_permutation_to_point(
-            permutation,
-            apply_reflection_to_point(
-                reflection,
-                beta(test_point)
-            )
-    ) == beta(
-        apply_permutation_to_point(
-            permutation,
-            apply_reflection_to_point(
-                reflection,
-                test_point
-            )
-        )
-    ) and \
-            apply_permutation_to_point(
-            permutation,
-            apply_reflection_to_point(
-                reflection,
-                gamma(test_point)
-            )
-    ) == gamma(
-        apply_permutation_to_point(
-            permutation,
-            apply_reflection_to_point(
-                reflection,
-                test_point
-            )
-        )
-    ):
-        return True
-    else:
-        False
-
 def get_Gamma_group():
+    '''
+    The group Gamma from the definition of T^7/Gamma
+    '''
     return [
         lambda x: x,
         alpha,
@@ -192,6 +200,9 @@ def get_Gamma_group():
     ]
 
 def equal_mod_one(x, y):
+    '''
+    Checks if two vectors are equal (up two two significant figures) with all entries modulo 1.
+    '''
     for x_coord, y_coord in zip(x, y):
         if round(x_coord%1, 2) != round(y_coord%1, 2):
             return False
@@ -202,6 +213,10 @@ def weak_check_commuting_with_Gamma(reflection, permutation):
     Tests if for all gamma1 in Gamma there exists gamma2 in Gamma such that
     gamma2(permutation(reflection(.)))=permutation(reflection(gamma1))). This is exactly the condition
     for the map permutation(reflection(.)) defined on T^7 to descend to T^7/Gamma.
+
+    Actually only tests this on one test point, not all points in T^7. However, the test
+    point is generic enough, so checking the condition for this test point is necessary and sufficient
+    for the condition to hold on all of T^7.
     '''
     test_point = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07]
     for g in get_Gamma_group():
@@ -217,49 +232,44 @@ def weak_check_commuting_with_Gamma(reflection, permutation):
     return True
 
 def test_weak_check_commuting_with_Gamma():
+    '''
+    Unit test for the function weak_check_commuting_with_Gamma.
+    :return:
+    '''
     reflection = (False, False, False, False, False, False, False)
     permutation = [0, 1, 2, 3, 4, 5, 6]
+    count_of_working_translations = 0
     for translation in get_all_candidate_translations():
         if weak_check_commuting_with_Gamma_with_translation(reflection, permutation, translation):
             print(f'With translation{translation([0, 0, 0, 0, 0, 0, 0])} descends to T^7/Gamma!')
+            count_of_working_translations += 1
         else:
-            # print(f'With translation{translation([0, 0, 0, 0, 0, 0, 0])} NOT descend to T^7/Gamma!')
             pass
+    assert count_of_working_translations == 128
 
 def weak_check_commuting_with_Gamma_with_translation(reflection, permutation, translation):
     '''
     Tests if for all gamma1 in Gamma there exists gamma2 in Gamma such that
     gamma2(permutation(reflection(.)))=permutation(reflection(gamma1))). This is exactly the condition
     for the map permutation(reflection(.)) defined on T^7 to descend to T^7/Gamma.
+
+    Actually only tests this on one test point, not all points in T^7. However, the test
+    point is generic enough, so checking the condition for this test point is necessary and sufficient
+    for the condition to hold on all of T^7.
     '''
     test_point = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07]
     for g in get_Gamma_group():
         g_okay = False
         for num, h in enumerate(get_Gamma_group()):
-            # print(num)
-            # input()
-            # print(f'g={g(test_point)}')
-            # print(f'h={h(test_point)}')
-            # print(translation(apply_permutation_to_point(permutation, apply_reflection_to_point(reflection, g(test_point)))))
-            # print(h(translation(apply_permutation_to_point(permutation, apply_reflection_to_point(reflection, test_point)))))
             if equal_mod_one(
                     translation(apply_permutation_to_point(permutation, apply_reflection_to_point(reflection, g(test_point)))),
                     h(translation(apply_permutation_to_point(permutation, apply_reflection_to_point(reflection, test_point))))
             ):
                 g_okay = True
         if not g_okay:
-            # print(f'Problem element: g={g(test_point)}')
-            # input()
             return False
     return True
 
 
 if __name__ == '__main__':
-    # tensor = (True, [1,2,7])
-    # permutation_dict = permutation_list_to_dict([2,1,3,4,5,6,7])
-    # print(permute_primitive_alternating_tensor(tensor, permutation_dict))
-
-    # test_weak_check_commuting_with_Gamma()
-    # exit()
-
     find_phi_stabilisers()
