@@ -1,1 +1,0 @@
-testFunc(5);
