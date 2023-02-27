@@ -25,4 +25,4 @@ D = divisor(ideal(a^5+b^5+c^5+d^5))
 -- degree +5
 HH^0(Fdualnormed**(sheaf OO(-D)))
 
--- if D was in Pic(X), then this would prove that F(4) is stable. But D is just an arbitrary divisor of degree 5, so this doesn't prove that F(4) is stable.
+-- if D was a generator of Pic(X), then this would prove that F(4) is stable. But D is just an arbitrary divisor of degree 5, so this doesn't prove that F(4) is stable.
