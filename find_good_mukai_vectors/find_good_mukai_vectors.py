@@ -61,7 +61,7 @@ def mukai_vectors_on_double_p1_p1(maxrank=6, maxc1=3, maxc2=10):
     print('Mukai vectors (r, c1, c2) on branched double P1xP1s, \nwhere c1 and c2 denotes the Chern classes on P1xP1!')
     for r in range(2,maxrank):
         for c1 in itertools.product(range(-maxc1+1, maxc1), range(-maxc1+1, maxc1)):
-            c1_squared = c1[0]*c1[1]
+            c1_squared = c1[0]*c1[1]+c1[1]*c1[0]
             for c2 in range(-maxc2+1, maxc2):
                 virtual_dimension = 2 * r * (2*c2) - (r - 1) * 2*(c1_squared) - 2 * (r ** 2 - 1)
                 if virtual_dimension == 0:
@@ -70,6 +70,6 @@ def mukai_vectors_on_double_p1_p1(maxrank=6, maxc1=3, maxc2=10):
 
 if __name__ == '__main__':
     print('Finding bundles with virtual dimension 0')
-    mukai_vectors_on_polarised_k3(maxrank=6, maxc1=10, maxc2=10)
-    mukai_vectors_on_double_p2(maxrank=6, maxc1=10, maxc2=10)
-    mukai_vectors_on_double_p1_p1(maxrank=6, maxc1=3, maxc2=10)
+    # mukai_vectors_on_polarised_k3(maxrank=6, maxc1=10, maxc2=10)
+    # mukai_vectors_on_double_p2(maxrank=6, maxc1=10, maxc2=10)
+    mukai_vectors_on_double_p1_p1(maxrank=4, maxc1=3, maxc2=5)
