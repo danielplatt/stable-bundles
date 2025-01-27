@@ -12,6 +12,8 @@ F1 = ker matrix {{x_(0,0),x_(0,1),0,1}}
 low = {-5,0};high={5,0};
 cohomologyMatrix(F1,low,high)
 
+needsPackage "TateOnProducts";
+(S,E) = productOfProjectiveSpaces{1,1};
 F2 = ker matrix {{x_(0,0)*x_(0,0),x_(0,1)*x_(0,1),x_(1,0)*x_(1,0),x_(1,1)*x_(1,1)}}
 low={-5,-5}; high={5,5};
 cohomologyMatrix(F2,low,high)
